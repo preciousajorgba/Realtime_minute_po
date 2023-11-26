@@ -1,6 +1,6 @@
 "name": "Realtime_minute_po",
     "version": "1.0.0",
-   "description": "",
+   "description": "bot",
     "scripts": {
         "build": "echo \"No build specified\" && exit 1",
         "test": "echo \"No test specified\" && exit 1",
@@ -10,7 +10,7 @@
         "type": "git",
         "url": "git+https://github.com/preciousajorgba/Realtime_minute_po.git"
     },
-    "author": "",
+    "author": "peauli",
     "license": "ISC",
     "bugs": {
         "url": "https://github.com/preciousajorgba/Realtime_minute_po/issues"
