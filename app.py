@@ -1,5 +1,5 @@
 from flask import Flask, render_template, request, flash, redirect, jsonify
-import config, csv, datetime
+import  csv, datetime
 from math import nan
 import requests
 
