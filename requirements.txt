@@ -1,5 +1,3 @@
 python-binance
-TA-Lib
-numpy
-backtrader
+python-decouple
 flask
