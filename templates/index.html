@@ -1,0 +1,595 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8" />
+    <meta
+      name="viewport"
+      content="width=device-width,initial-scale=1.0,maximum-scale=1.0,minimum-scale=1.0"
+    />
+    <title>Lightweight Charts™ Customization Tutorial</title>
+    <!-- Adding the standalone version of Lightweight charts -->
+    <script
+      type="text/javascript"
+      src="https://unpkg.com/lightweight-charts/dist/lightweight-charts.standalone.production.js"
+    ></script>
+    <style>
+      body {
+        padding: 10;
+        margin: 10;
+      }
+    </style>
+  </head>
+
+  <body>
+    <div
+      id="container"
+      style="position: absolute; width: 100%; height: 80%"
+    ></div>
+    <script type="text/javascript">
+      // Function to generate a sample set of Candlestick datapoints
+
+      // Create the Lightweight Chart within the container element
+      //const chart = LightweightCharts.createChart(
+        //document.getElementById('container')
+      //);
+      var char = LightweightCharts.createChart(
+        document.getElementById('container'), {
+	
+	layout: {
+		backgroundColor: '#ffffff',
+		textColor: 'rgba(33, 56, 77, 1)',
+	},
+	grid: {
+		vertLines: {
+			color: 'rgba(197, 203, 206, 0.7)',
+		},
+		horzLines: {
+			color: 'rgba(197, 203, 206, 0.7)',
+		},
+	},
+	timeScale: {
+		timeVisible: true,
+    secondsVisible: true,
+	},
+});
+
+      // Generate sample data to use within a candlestick series
+      //const candleStickData = generateCandlestickData();
+
+      // Create the Main Series (Candlesticks)
+      const lineS = char.addLineSeries({
+		priceFormat: {
+			minMove: 0.000001,
+			precision: 6,
+		},
+	});
+     
+    
+      var chart = LightweightCharts.createChart(
+        document.getElementById('container'), {
+	
+	layout: {
+		backgroundColor: '#ffffff',
+		textColor: 'rgba(33, 56, 77, 1)',
+	},
+	grid: {
+		vertLines: {
+			color: 'rgba(197, 203, 206, 0.7)',
+		},
+		horzLines: {
+			color: 'rgba(197, 203, 206, 0.7)',
+		},
+	},
+	timeScale: {
+		timeVisible: true,
+    secondsVisible: true,
+	},
+});
+
+      // Generate sample data to use within a candlestick series
+      //const candleStickData = generateCandlestickData();
+
+      // Create the Main Series (Candlesticks)
+      const chSeries=chart.addLineSeries({
+		priceFormat: {
+			minMove: 0.000001,
+			precision: 6,
+		},
+	});
+
+  const chSeries2=chart.addLineSeries({
+		priceFormat: {
+			minMove: 0.000001,
+			precision: 6,
+		},
+	});
+
+      const lineSeries = chart.addLineSeries();
+      var candleSeries = chart.addCandlestickSeries({
+	    upColor: '#00ff00',
+	    downColor: '#ff0000', 
+	    borderDownColor: 'rgba(255, 144, 0, 1)',
+	    borderUpColor: 'rgba(255, 144, 0, 1)',
+	    wickDownColor: 'rgba(255, 144, 0, 1)',
+	    wickUpColor: 'rgba(255, 144, 0, 1)',
+      });
+
+     
+
+      // Set the data for the Main Series
+      //lineSeries.setData(candleStickData);
+      const fruits = [];
+      var stats = [];
+      const resistance =[];
+      const support =[];
+      var r=NaN;
+      var s=NaN;
+      var timeo = NaN;
+      var period = [];
+      var openo = [];
+      var h_max =NaN;
+      var l_min = NaN;
+      var diff =NaN
+      var pric = 0;
+      var op=0;
+      var open_value=NaN;
+      var open_val = NaN;
+      var open_time = NaN;
+      var fruit_time=[];
+      var op_values =[];
+      var op_stats =[];
+      var opened = NaN;
+      var no_period = 0;
+      var timed = NaN;
+      var dataBuffer=[];
+      var smadata=[];
+      var real_dataBuffer=NaN;
+      var real_sma_data=NaN;
+      var supervalues=NaN;
+      var ch_value=NaN;
+      var candles=[];
+      var open_count1=0;
+      var open_count2=0;
+
+
+      function calculateSMA(data, period) {
+  // New series to hold the SMA values
+  var sma = [];
+
+  // Loop through the original series in reverse
+  for (var i = period; i < data.length; i++) {
+    // Sum the values within the period
+    var sum = 0;
+    //for each element in series starting from the corrent ,do this
+    for (var j = 0; j < period; j++) {
+      // Access the value at the current index - j
+      var value = data[i - j];
+      // Add the value to the sum
+      sum += value;
+    }
+    // Then continue-still on that same elmenent point. Calculate the SMA value by dividing the sum by the period
+    var smaValue = sum / period;
+    // Add the SMA value to the new series
+    sma.push(smaValue);
+  }
+
+  // Reverse the SMA series to match the order of the original series because the pushing done starts appending from the current point. [current,last, ...]. so we need to reverse it to become [....,last,current]
+  //the way it should be.
+
+  // Return the SMA series
+  return sma;
+}
+//true_range data is always ohlc data.
+function true_range(data,period) {
+  // New series to hold the true range values
+  var tr = [];
+
+  // Loop through the original series in reverse
+  for (var i = period; i < data.length; i++) {
+    // Handle the case where i is 0
+
+    // Calculate the true range value
+    var value = Math.max(
+      Math.max(data[i].high - data[i].low, Math.abs(data[i].high - data[i-1].close)), 
+      Math.abs(data[i].low - data[i-1].close)
+    );
+    
+    // Add the true range value to the new series
+    tr.push(value);
+  }
+
+  // Return the true range series
+  return tr;
+}
+//source data
+// the first value of the returned rma array is to be discarded
+function calculateRMA(data, length) {
+  // Calculate the alpha value
+  var alpha = 1 / length;
+
+  // Calculate the initial SMA value
+  var sma = calculateSMA(data, length);
+  //var newData = sma.slice(length-1);
+
+  // New series to hold the RMA values
+  var rma=[];
+
+  // Loop through the original series
+  for (var i = 0; i < sma.length; i++) {
+    // Calculate the RMA value
+    var value = (i === 0) ? sma[i] : alpha * data[i+length-1] + (1 - alpha) * rma[i - 1];
+
+    // Add the RMA value to the new series
+    rma.push(value);
+  }
+
+  // Return the RMA series
+  return rma.slice(1);
+}
+
+
+function strend(initialArray, period = 3, multiplier = 3 ) {
+    
+    var atr = calculateRMA(true_range(initialArray, period), period);
+    var r =initialArray.slice(initialArray.length - atr.length);
+    //const atr = technicalindicators_1.ATR.calculate(v);
+    //const r = [...initialArray];
+    //console.log(r);
+    //for (let i = 0; i < period; i++) {
+        //r.shift();
+   // }
+   //console.log(atr,r);
+    const basicUpperBand = [];
+    const basicLowerBand = [];
+    for (let i = 0; i < r.length; i++) {
+        basicUpperBand.push((r[i].high + r[i].low) / 2 + multiplier * atr[i]);
+        basicLowerBand.push((r[i].high + r[i].low) / 2 - multiplier * atr[i]);
+    }
+    const finalUpperBand = [];
+    const finalLowerBand = [];
+    let previousFinalUpperBand = 0;
+    let previousFinalLowerBand = 0;
+    for (let i = 0; i < r.length; i++) {
+        if (basicUpperBand[i] < previousFinalUpperBand ||
+            (r[i - 1] && r[i - 1].close > previousFinalUpperBand)) {
+            finalUpperBand.push(basicUpperBand[i]);
+        }
+        else {
+            finalUpperBand.push(previousFinalUpperBand);
+        }
+        if (basicLowerBand[i] > previousFinalLowerBand ||
+            (r[i - 1] && r[i - 1].close < previousFinalLowerBand)) {
+            finalLowerBand.push(basicLowerBand[i]);
+        }
+        else {
+            finalLowerBand.push(previousFinalLowerBand);
+        }
+        previousFinalUpperBand = finalUpperBand[i];
+        previousFinalLowerBand = finalLowerBand[i];
+    }
+    const superTrend = [];
+    let previousSuperTrend = 0;
+    for (let i = 0; i < r.length; i++) {
+        let nowSuperTrend = 0;
+        if (previousSuperTrend == finalUpperBand[i - 1] &&
+            r[i].close <= finalUpperBand[i]) {
+            nowSuperTrend = finalUpperBand[i];
+        }
+        else if (previousSuperTrend == finalUpperBand[i - 1] &&
+            r[i].close > finalUpperBand[i]) {
+            nowSuperTrend = finalLowerBand[i];
+        }
+        else if (previousSuperTrend == finalLowerBand[i - 1] &&
+            r[i].close >= finalLowerBand[i]) {
+            nowSuperTrend = finalLowerBand[i];
+        }
+        else if (previousSuperTrend == finalLowerBand[i - 1] &&
+            r[i].close < finalLowerBand[i]) {
+            nowSuperTrend = finalUpperBand[i];
+        }
+        superTrend.push(nowSuperTrend);
+        previousSuperTrend = superTrend[i];
+    }
+    return superTrend;
+
+
+}
+
+function ch_candle(data){
+
+var h_open=[];
+var h_close=[];
+var h_low=[];
+var h_high=[];
+var h_dhigh=[];
+var dh_low=[];
+var dh_dhigh=[];
+var previous_h_low=0;
+var previous_h_dhigh=0;
+var upcandle1=[];
+var upcandle2=[];
+var previous_upcandle1=0;
+var previous_upcandle2=0;
+var downstick =[];
+var previous_downstick=0;
+
+var h_ope=[];
+var h_clos=[];
+var h_lo=[];
+var h_hig=[];
+var h_dhig=[];
+var dh_lo=[];
+var dh_dhig=[];
+var previous_h_lo=0;
+var previous_h_dhig=0;
+var upcandl1=[];
+var upcandl2=[];
+var previous_upcandl1=0;
+var previous_upcandl2=0;
+var downstic =[];
+var previous_downstic=0;
+
+
+
+
+
+
+
+for (let i=1;i<data.length;i++){
+    h_open.push(data[i-1].low);
+    h_close.push(data[i].close);
+    h_low.push(data[i].close < h_open[i-1]? data[i].close : h_open[i-1]);
+    h_high.push(data[i-1].high);
+    h_dhigh.push(data[i].close > h_high[i-1] ? data[i].close : h_high[i-1]);
+    dh_low.push(data[i].close < previous_h_low? data[i].close : previous_h_low);
+    dh_dhigh.push(data[i].close > previous_h_dhigh ? data[i].close : previous_h_dhigh);
+    upcandle1.push(((data[i].close < previous_h_dhigh) && (data[i].close > dh_low[i-1]))? dh_low[i-1] : previous_upcandle1 );
+    upcandle2.push(data[i].close >= previous_h_dhigh ? dh_low[i-1]:previous_upcandle2);
+    downstick.push(((dh_low[i-1] < upcandle1[i-1]) && (dh_low[i-1] < upcandle2[i-1]))? dh_dhigh[i-1]: previous_downstick);
+
+    previous_h_low =h_low[i-1];
+    previous_h_dhigh =h_dhigh[i-1];
+    previous_upcandle1=upcandle1[i-1];
+    previous_upcandle2=upcandle2[i-1];
+    previous_downstick=downstick[i-1];
+
+
+}
+
+for (let i=1;i<data.length;i++){
+    h_ope.push(data[i-1].high);
+    h_clos.push(data[i].close);
+    h_lo.push(data[i].close > h_ope[i-1]? data[i].close : h_ope[i-1]);
+    h_hig.push(data[i-1].low);
+    h_dhig.push(data[i].close < h_hig[i-1] ? data[i].close : h_hig[i-1]);
+    dh_lo.push(data[i].close > previous_h_lo? data[i].close : previous_h_lo);
+    dh_dhig.push(data[i].close < previous_h_dhig ? data[i].close : previous_h_dhig);
+    upcandl1.push(((data[i].close > previous_h_dhig) && (data[i].close < dh_lo[i-1]))? dh_lo[i-1] : previous_upcandl1 );
+    upcandl2.push(data[i].close <= previous_h_dhig ? dh_lo[i-1]:previous_upcandl2);
+    downstic.push(((dh_lo[i-1] > upcandl1[i-1]) && (dh_lo[i-1] > upcandl2[i-1]))? dh_dhig[i-1]: previous_downstic);
+
+    previous_h_lo =h_lo[i-1];
+    previous_h_dhig =h_dhig[i-1];
+    previous_upcandl1=upcandl1[i-1];
+    previous_upcandl2=upcandl2[i-1];
+    previous_downstic=downstic[i-1];
+
+
+}
+return [downstick[downstick.length-1],downstic[downstic.length -1]];
+}
+
+
+
+
+
+
+      var binanceSocket = new WebSocket("wss://stream.binance.com:9443/ws/dotusdt@kline_1m")//"wss://stream.binance.com:9443/ws/dotusdt@aggTrade")//"wss://stream.binance.com:9443/ws/btcusdt@kline_1m");
+
+      binanceSocket.onmessage = function (event) {	
+        var message = JSON.parse(event.data);
+        
+      
+      //if (isNaN(first_p)){
+        //first_p=Number(message.k.c)
+      //}
+        var candlestick = message; //var candlestick = message.k;
+
+        var currentUtcTime2 = new Date().toUTCString();
+        // Convert the UTC time string back to a Date object
+        var currentUtcDate = new Date(currentUtcTime2);
+
+// Get the UTC timestamp in milliseconds
+        var currentUtcTimestamp3 = currentUtcDate.getTime();
+        fruit_time.push(currentUtcTimestamp3);
+        //period.push(Math.trunc((message.k.t/60000)%60));
+        period.push(Math.trunc((message.k.t/1000)%60));
+        //lve
+
+      //console.log(candlestick)
+      //if ((period[period.length-1])!== (period[period.length-2]))
+        fruits.push(Number(message.k.c));
+        if (fruits.length > 1) {
+          if  ((isNaN(r)) && (Math.min(fruits[fruits.length-2],Number(message.k.c))!= Math.max(fruits[fruits.length-2],Number(message.k.c)))){
+              r=Math.max(fruits[fruits.length-2],Number(message.k.c));
+              s=Math.min(fruits[fruits.length-2],Number(message.k.c));
+        };
+
+          if  ((!isNaN(r)) && (Math.min(fruits[fruits.length-2],Number(message.k.c))!= Math.max(fruits[fruits.length-2],Number(message.k.c)))){
+                r=Math.max(fruits[fruits.length-2],Number(message.k.c));
+                s=Math.min(fruits[fruits.length-2],Number(message.k.c));
+          };
+
+
+          if (!isNaN(r)){ 
+            resistance.push(r);
+            support.push(s);
+          
+          };
+
+          if ((resistance.length  >1) && ((resistance[resistance.length-1])>(resistance[resistance.length-2])) && ((support[support.length-1])>(support[support.length-2]))){
+            stats.push(1)
+            candles.push(r);
+          }
+
+          if ((resistance.length  >1) && ((resistance[resistance.length-1])<(resistance[resistance.length-2])) && ((support[support.length-1])<(support[support.length-2]))){
+            stats.push(0)
+            candles.push(s);
+          }
+
+          if ((stats.length  >1) && ((stats[stats.length-1])!== (stats[stats.length-2]))){
+          //timeo = message.k.t/1000;
+            open_value=fruits[fruits.length - 2];
+            open_count1 +=1;
+            open_time = fruit_time[fruit_time.length-2];
+            openo.push(fruits[fruits.length - 2]);
+          //h_max = Math.max(openo,Number(message.k.c));
+          //l_min = Math.min(openo,Number(message.k.c));
+          //candleSeries.update({
+            //time: timeo ,
+            //open: openo,
+            //close: Number(message.k.c),
+            //high: h_max,
+            //low: l_min,
+            
+            }
+          //if (openo.length  >1){
+            //timeo = message.k.t/1000;
+            //diff =(openo[openo.length-1] - openo[openo.length-2]);
+            //pric = pric + diff;
+            //real_p = first_p + pric;
+            //h_max = Math.max(openo,Number(message.k.c));
+            //l_min = Math.min(openo,Number(message.k.c));
+            //lineSeries.update({
+              //time: message.k.t/1000,
+              //value: pric,
+              //close: Number(message.k.c),Q	1Q`	
+              //high: 
+        
+            }
+          if (!isNaN(open_value)){ 
+            op_diff =(Number(message.k.c)-open_value);
+            op =(op + op_diff);
+            op_stats.push(op);
+            if ((op_stats.length  >1) && ((op_stats[op_stats.length-1])!== (op_stats[op_stats.length-2]))){
+          //timeo = message.k.t/1000;
+            open_val=op_stats[op_stats.length - 2];
+            }
+            if (!isNaN(open_val)){
+             
+                
+
+                
+
+              no_period = no_period +1;
+              opened = open_val;
+              timed= message.k.t;
+              h_max=Math.max(opened,op);
+              l_min = Math.min(opened,op);
+
+              
+                
+              dataBuffer.push({ high:h_max, low: l_min, close: op});
+              smadata.push(op);
+
+              if ((dataBuffer.length >= 60) && (smadata.length >= 60)) {
+                  //dataBuffer.shift(); // Remove the oldest data point
+                  //const trval = tRange(dataBuffer);
+                  
+              //real_sma_data=smadata.concat(op);
+              //real_dataBuffer=dataBuffer.concat({ high:h_max, low: l_min, close:op});
+                           //atrValues = calculateATR_RMA(dataBuffer, 5);
+                //smavalues =calculateSMA(real_dataBuffer,3);
+                //rmavalues=calculateRMA(real_sma_data,1);
+                //values = true_range(real_dataBuffer,3);
+                //atrValues = calculateRMA(true_range(real_dataBuffer,3),3);
+                //src=real_dataBuffer;
+                supervalues=strend(dataBuffer,10,3);
+                ch_value=ch_candle(dataBuffer);
+
+                lineS.update({
+                    time: timed / 1000,
+                    value: Number(message.k.c),
+                    });
+
+
+                candleSeries.update({
+              time: timed/1000,
+              open:opened,
+              close: op,
+              high:h_max,
+              low: l_min
+              
+              });
+                
+                  lineSeries.update({
+                    time: timed / 1000,
+                    value: supervalues[supervalues.length-1],
+                    });
+
+                    chSeries.update({
+                    time: timed / 1000,
+                    value: ch_value[0],
+                    color: '#00FF00'
+                    });
+
+                    chSeries2.update({
+                    time: timed / 1000,
+                    value: ch_value[1],
+                    color:'#FFC0CB'
+                    });
+
+        
+        
+    }
+                 
+
+              
+
+    
+
+            
+
+            }
+            
+    
+            
+            
+          }
+          open_count2=open_count1;
+          console.log(fruits[fruits.length -1],op)
+          
+        }
+
+
+        //if ((period.length  >1) && ((period[period.length-1])== (period[period.length-2]))){
+          //h_max=Math.max(h_max,Math.max(openo,Number(message.k.c)));
+          //l_min=
+
+        
+
+      
+    
+    if (fruits.length >4) {
+        fruits.shift();
+        
+    }
+    if (openo.length >1){
+      openo.shift();
+	    }
+
+    if (fruit_time.length > 4) {
+        fruit_time.shift();
+    }
+    
+    
+      // Adding a window resize event handler to resize the chart when
+      // the window size changes.
+      // Note: for more advanced examples (when the chart doesn't fill the entire window)
+      // you may need to use ResizeObserver -> https://developer.mozilla.org/en-US/docs/Web/API/ResizeObserver
+      window.addEventListener("resize", () => {
+        chart.resize(window.innerWidth, window.innerHeight);
+      });
+    </script>
+  </body>
+</html>
